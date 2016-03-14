@@ -2,9 +2,12 @@
 /* header file for main func */
 /* *************************** */
 
-unordered_map<string,code_table_glb*> initialize(unordered_map<string,code_table_glb*>& code_finder);
+#ifndef __MAIN_SRC_H__
+#define __MAIN_SRC_H__
+using namespace std;
 
-void display_results(vector<string> input,vector<string> output);
+
 
 void compare_results(vector<string> input,vector<string> output,vector<string> compressed);
 
+#endif

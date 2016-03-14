@@ -1,21 +1,15 @@
 
-/* header file for data process.cpp */
-vector<string> input_processor(vector<string> input_to_process,unordered_map<string,code_table_glb*> pattern_finder,vector<pair<string,string> >& word_dict_glb);
+#ifndef __DATA_PROCESS_H__
+#define __DATA_PROCESS_H__
 
-string process_string_partial(string cur_str,string& unmatched);
+using namespace std;
+vector<string> input_processor(vector<string> input_to_process,float& flit_count);
 
-bool dict_compare(string cur_str,string& index_of_dict,string& processed_str,vector<pair<string,string> > word_dict_glb,string& unmatched,unordered_map<string,code_table_glb*> pattern_finder);
-
-
-int compare_str(string dict_str,string cur_str,string& local_unmatched,string& local_processed_str);
-
+void prepare_decode_dict(vector<string> input,unordered_map<string,string>& lcl_dict);
 string get_binary(int index);
+unordered_map<string,int> prepare_dict(vector<string> input_to_process,unordered_map<string,string>& lcl_dict);
 
-vector<string> decode_string(vector<string> input_string,unordered_map<string,code_table_glb*>& code_finder,vector<pair<string,string> > word_dict_glb); 
-string search_dict(string dict_index,vector<pair<string,string> > word_dict_glb);
+string encode_data(string input,unordered_map<string,string> lcl_dict,float& flit_count,unordered_map<string,int>& occ_check);
+vector<string> decode_string(vector<string> input_string);
 
-string decompress_val(string cur_str,unordered_map<string,code_table_glb*> code_finder,vector<pair<string,string> > word_dict_glb);
-
-string process_string_pattern(string pattern_str,string cur_str,int index,vector<pair<string,string> > word_dict_glb);
-
-string decompress_val(string cur_str,unordered_map<string,code_table_glb*> code_finder,vector<pair<string,string> > word_dict_glb); 
+#endif

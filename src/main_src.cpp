@@ -3,53 +3,87 @@
 #include<vector>
 #include<cstring>
 #include<utility>
-#include "dict/code_table.h"
+#include<fstream>
 #include "main_src.h"
 #include "parser/file_reader.h"
 #include "processor/data_process.h"
+
 using namespace std;
 
-#define  CODE_TABLE_LEN 6
+#define FLIT_SIZE 32
 
-int main()
+int main(int argc,char *argv[])
 {
+	/* Note : we need to combine encoded string and then make it decode in place of vector array */
 
-	unordered_map<string,code_table_glb*> pattern_finder;
-	unordered_map<string,code_table_glb*> code_finder;
+	if(argc <=1)
+	{
+		cout<<"Please enter data trace file \n";
+		return 0;
+	}
 	vector<string> input_to_process;
 	vector<string> output_to_get;
 	vector<string> decoded_output;
-	vector<pair<string,string> > word_dict_glb;
 
+	/* open file */
 
+	int file_size=open_file(argv[1]);
 
-	/* func to put values to code table */
-	pattern_finder=initialize(code_finder);	
+	ofstream myfile("output_flit.txt");
 
-	/* get inuput data */
-	input_to_process=get_file_input();
+	int net_flit_input=0,net_flit_output=0;
+	for(int i=0;i<file_size;i++)
+	{
+		float flit_count=0;
+		cout<<"INPUT PROCESS NUMBER : "<<"\t"<<i+1<<"\n";
+		int data_size=0;
+		/* get inuput data */
+		input_to_process=get_file_input(i,data_size);
 
-	/* input processor */
+		/* input processor */
 	
-	output_to_get=input_processor(input_to_process,pattern_finder,word_dict_glb);
+		output_to_get=input_processor(input_to_process,flit_count);
 
-	/* display encode results */
+		/* decode */
+		decoded_output=decode_string(output_to_get);
 
-	display_results(input_to_process,output_to_get);
+		/* display decode results */
 
-	/* decode */
-	decoded_output=decode_string(output_to_get,code_finder,word_dict_glb);
+		cout<<"\n";
+		cout<<"\n";
 
-	/* display decode results */
+		/* compare results */
+
+		compare_results(input_to_process,decoded_output,output_to_get);
+
+		/* compression count */
+
+		cout<<"______________________________________________\n";
+		cout<<"---------- RATIO ------------------------------\n";
+		cout<<"_______________________________________________\n";
+	
+		cout<<"Inpt Size bytes : \t"<<data_size<<"\t"<<"Output Size bytes : \t"<<flit_count<<"\n";
+		cout<<"Inpt Size flits : \t"<<data_size/FLIT_SIZE<<"\t"<<"Output Size flit : \t"<<flit_count/FLIT_SIZE<<"\n";
+		myfile<<"Inpt Size flits : \t"<<data_size/FLIT_SIZE<<"\t"<<"Output Size flit : \t"<<flit_count/FLIT_SIZE<<"\n";
+		
+		net_flit_input+=(data_size/FLIT_SIZE);
+		net_flit_output+=(flit_count/FLIT_SIZE);
+	}
 
 	cout<<"\n";
 	cout<<"\n";
 	
-	display_results(output_to_get,decoded_output);
+	cout<<"======================================================\n";
+	cout<<"--------------- NET COMPRESSION ----------------------\n";
+	cout<<"=======================================================\n";
 
-	/* compare results */
 
-	compare_results(input_to_process,decoded_output,output_to_get);		
+	cout<<"\n";	
+	cout<<"Net Flit input : \t"<<net_flit_input<<"\t"<<"Net Flit output : \t"<<net_flit_output<<"\n";
+	myfile<<"Net Flit input : \t"<<net_flit_input<<"\t"<<"Net Flit output : \t"<<net_flit_output<<"\n";
+
+	system("cat output_flit.txt | sort -k 4 > sorted_output_flit.txt");
+	myfile.close();
 	return 0;	
 	
 }
@@ -79,158 +113,11 @@ void compare_results(vector<string> input,vector<string> output,vector<string> c
 	for(int i=0;i<input.size();i++)
 	{
 		if(input[i].compare(output[i])==0)
-		cout<<input[i]<<"\t"<<"\t"<<compressed[i]<<"\t"<<"\t"<<output[i]<<"\t"<<"Y"<<"\n";
+		cout<<i+1<<" :\t"<<input[i]<<"\t"<<"\t"<<compressed[i]<<"\t"<<"\t"<<output[i]<<"\t"<<"Y"<<"\n";
 		else
-		cout<<input[i]<<"\t"<<"\t"<<compressed[i]<<"\t"<<"\t"<<output[i]<<"\t"<<"\t"<<"Unmatch"<<"\n";
+		cout<<i+1<<" : \t"<<input[i]<<"\t"<<"\t"<<compressed[i]<<"\t"<<"\t"<<output[i]<<"\t"<<"\t"<<"Unmatch"<<"\n";
 		cout<<"______________________________________________________________\n";
 	}
 }
 
-/* function to display results
-*/
-void display_results(vector<string> input,vector<string> output)
-{
-	
-	cout<<"=======================================\n";
-	cout<<" ---------- RESULTS --------------------\n";
-	cout<<"=======================================\n";
-	for(int i=0;i<output.size();i++)
-	{
-		cout<<input[i]<<"\t"<<"---->"<<"\t"<<output[i]<<"\n";
-	}
-}
-/*
-* function to initialize code table
-*/
-unordered_map<string,code_table_glb*> initialize(unordered_map<string,code_table_glb*>& code_finder)
-{
-	
-	unordered_map<string,code_table_glb*> pattern_finder;
-	string code;
-	string pattern;
-	int length=0;
-	float frequency=0;
 
-	/* init 1*/
-	
-	// code init 00
-	code.assign("00");
-
-	// string init zzzz
-	pattern.assign("zzzz");
-
-	// len 2
-	length=2;
-
-	// frequency
-	frequency=39.7;
-
-	
-	code_table_glb *ob1 = new code_table_glb(code,pattern,length,frequency);	
-
-	pattern_finder.insert(make_pair(pattern,ob1));
-	code_finder.insert(make_pair(code,ob1));
-
-	/* init 2 */
-
-	// code init 01
-	
-	code.assign("01");
-	
-	// string init xxxx
-	pattern.assign("xxxx");
-
-	
-	// len=34;
-	length=34;
-	
-	frequency=32.1;
-
-	code_table_glb *ob2= new code_table_glb(code,pattern,length,frequency);
-
-	
-	pattern_finder.insert(make_pair(pattern,ob2));
-	code_finder.insert(make_pair(code,ob2));
-	
-	
-	/* init 3 */
-	
-	code.assign("10");
-	
-
-	// string init mmmm
-	pattern.assign("mmmm");
-
-	
-	// len=6;
-	length=6;
-	
-	frequency=7.6;
-
-	code_table_glb *ob3= new code_table_glb(code,pattern,length,frequency);
-	
-	pattern_finder.insert(make_pair(pattern,ob3));
-	code_finder.insert(make_pair(code,ob3));
-	
-	
-	
-	/* init 4 */
-	
-	code.assign("1100");
-
-	// string init mmxx
-	pattern.assign("mmxx");
-
-	
-	// len=24;
-	length=24;
-	
-	frequency=6.1;
-
-	code_table_glb *ob4= new code_table_glb(code,pattern,length,frequency);
-
-	
-	pattern_finder.insert(make_pair(pattern,ob4));
-	code_finder.insert(make_pair(code,ob4));
-	
-	/* init 5 */
-	
-	code.assign("1101");
-	
-	// string init zzzx
-	pattern.assign("zzzx");
-
-	
-	// len=12;
-	length=12;
-	
-	frequency=7.3;
-
-	code_table_glb *ob5= new code_table_glb(code,pattern,length,frequency);
-
-		
-	pattern_finder.insert(make_pair(pattern,ob5));
-	code_finder.insert(make_pair(code,ob5));
-	
-	/* init 6 */
-	
-	code.assign("1110");
-
-	// string init mmmx
-	pattern.assign("mmmx");
-
-	
-	// len=16;
-	length=16;
-	
-	frequency=7.2;
-
-	code_table_glb *ob6= new code_table_glb(code,pattern,length,frequency);
-
-	
-	pattern_finder.insert(make_pair(pattern,ob6));
-	code_finder.insert(make_pair(code,ob6));
-	
-	return pattern_finder;
-
-}
